@@ -57,30 +57,55 @@ int basic_example_main()
 	ret = adp1050_init(&adp1050_desc, &adp1050_ip);
 	if (ret)
 		goto exit;
+	
+	switch (adp1050_desc->dev_id) {
+		case ID_ADP1050:
+			pr_info("ADP1050 detected! \n");
+			break;
+		case ID_ADP1051:
+			pr_info("ADP1051 detected! \n");
+			break;
+		case ID_ADP1055:
+			pr_info("ADP1055 detected! \n");
+			break;
+		default:
+			pr_info("Unknown device detected! \n");
+			goto exit;
+	}
 
 	/* Unlocking CHIP and EEPROM password. */
 	ret = adp1050_unlock_pass(adp1050_desc, ADP1050_CHIP_DEFAULT_PASS,
 				  ADP1050_CHIP_PASS);
 	if (ret)
 		goto exit;
+	
+	pr_info("Chip Password unlocked! \n");
 
 	ret = adp1050_unlock_pass(adp1050_desc, ADP1050_EEPROM_DEFAULT_PASS,
 				  ADP1050_EEPROM_PASS);
 	if (ret)
 		goto exit;
 
+	pr_info("EEPROM Password unlocked! \n");
+
 	ret = adp1050_unlock_pass(adp1050_desc, ADP1050_TRIM_DEFAULT_PASS,
 				  ADP1050_TRIM_PASS);
 	if (ret)
 		goto exit;
 
+	pr_info("Trim Password unlocked! \n");
+
 	ret = adp1050_set_close_loop(adp1050_desc);
 	if (ret)
 		goto exit;
 
+	pr_info("Closed loop set! \n");
+
 	ret = adp1050_vout_tr(adp1050_desc, ADP1050_VOUT_TR_200UV_US);
 	if (ret)
 		goto exit;
+
+	pr_info("Vout Transition Rate set (200uV/uS)! \n");
 
 	ret = adp1050_vout_scale(adp1050_desc, -12, 341);
 	if (ret)
@@ -89,6 +114,8 @@ int basic_example_main()
 	ret = adp1050_vout_value(adp1050_desc, 0x3000, 0x5000);
 	if (ret)
 		goto exit;
+
+	pr_info("Vout Value and Scale set! \n");
 
 	ret = adp1050_pwm_duty_cycle(adp1050_desc, 0x00DE, 0x000E, ADP1050_OUTA);
 	if (ret)
@@ -102,22 +129,33 @@ int basic_example_main()
 	if (ret)
 		goto exit;
 
+	pr_info("PWM Set! Duty Cycle: Mantissa = 0x%x ; Exponent = 0x%x \n"
+		, vout, data);
+
 	/* Checking statuses. */
 	ret = adp1050_read(adp1050_desc, ADP1050_STATUS_VOUT, &data, 1);
 	if (ret)
 		goto exit;
+	
+	pr_info("STATUS_VOUT = 0x%x \n", data);
 
 	ret = adp1050_read(adp1050_desc, ADP1050_STATUS_INPUT, &data, 1);
 	if (ret)
 		goto exit;
 
+	pr_info("STATUS_INPUT = 0x%x \n", data);
+
 	ret = adp1050_read(adp1050_desc, ADP1050_STATUS_CML, &data, 1);
 	if (ret)
 		goto exit;
 
+	pr_info("STATUS_CML = 0x%x \n", data);
+
 	ret = adp1050_read(adp1050_desc, ADP1050_STATUS_WORD, data2, 2);
 	if (ret)
 		goto exit;
+
+	pr_info("STATUS_WORD = 0x%x \n", data2);
 
 exit:
 	if (ret)

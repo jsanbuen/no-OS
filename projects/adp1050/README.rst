@@ -8,15 +8,17 @@ Supported Evaluation Boards
 ---------------------------
 
 * `ADP1050DC1-EVALZ <https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/eval-adp1050.html#eb-documentation>`_
+* `ADP1051DC1-EVALZ <https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/eval-adp1051.html#eb-documentation>`_
+* `ADP1055DC1-EVALZ <https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/eval-adp1055.html#eb-documentation>`_
 
 Overview
 --------
 
-The evaluation board allows the ADP1050 to be exercised without the need for
+The evaluation board allows the ADP1050/1/5 to be exercised without the need for
 external components. The board is set up to act as an isolated PSU,
 outputting a rated load of 12 V, 20 A from a 36 V dc to 75 V dc source.
 
-Full performance details are provided in the ADP1050 data sheet, which should
+Full performance details are provided in the ADP1050/1/5 data sheet, which should
 be consulted in conjunction with user guide.
 
 Hadrware Specifications
@@ -26,8 +28,8 @@ Power Supply Requirments
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 For this specific project an external power supply is used to provide a 20.1V
-and 12V voltages for the ADP1050DC1-EVALZ daughter board to simulate a parallel
-circuit to the ADP1050 as well as a +5V Power Supply for the PMBUS/I2C
+and 12V voltages for the ADP1050/1/5DC1-EVALZ daughter board to simulate a parallel
+circuit to the ADP1050/1/5 as well as a +5V Power Supply for the PMBUS/I2C
 interface.
 
 **Pin Description**
@@ -139,7 +141,7 @@ IIO example
 This project is actually a IIOD demo for ADP1050DC1-EVALZ evaluation board.
 The project launches a IIOD server on the board so that the user may connect
 to it via an IIO client.
-Using IIO-Oscilloscope, the user can configure the IMU and view the measured data on a plot.
+Using IIO-Oscilloscope, the user can configure the device and view the measured data on a plot.
 
 If you are not familiar with ADI IIO Application, please take a look at:
 `IIO No-OS <https://wiki.analog.com/resources/tools-software/no-os-software/iio>`_
@@ -171,6 +173,8 @@ Maxim Platform
 **Used hardware**
 
 * `ADP1050DC1-EVALZ daughter board <https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/eval-adp1050.html#eb-overview>`_
+* `ADP1051DC1-EVALZ daughter board <https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/eval-adp1051.html#eb-overview>`_
+* `ADP1055DC1-EVALZ daughter board <https://www.analog.com/en/resources/evaluation-hardware-and-software/evaluation-boards-kits/eval-adp1055.html#eb-overview>`_
 * `AD-APARD32690-SL <https://www.analog.com/en/design-center/evaluation-hardware-and-software/evaluation-boards-kits/ad-apard32690-sl.html>`_
 
 **Connections**:

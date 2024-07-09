@@ -52,6 +52,10 @@ int main()
 {
 	int ret = -EINVAL;
 
+#if (TARGET_NUM != 32670 && TARGET_NUM != 32690)
+#error Supports only MAX32670/32690 targets!
+#endif
+
 #ifdef BASIC_EXAMPLE
 	struct no_os_uart_desc *uart_desc;
 

@@ -39,7 +39,11 @@
 #include "parameters.h"
 
 struct max_uart_init_param adp1050_uart_extra = {
+#if (TARGET_NUM == 32670)
+	.flow = MAX_UART_FLOW_DIS,
+#else
 	.flow = UART_FLOW_DIS,
+#endif
 };
 
 struct max_i2c_init_param adp1050_i2c_extra = {

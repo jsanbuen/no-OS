@@ -42,6 +42,7 @@
 #include "no_os_alloc.h"
 #include "no_os_delay.h"
 #include "no_os_error.h"
+#include "no_os_print_log.h"
 
 /**
  * @brief Send command byte/word to ADP1050
@@ -334,6 +335,9 @@ int adp1050_pwm_duty_cycle(struct adp1050_desc *desc, uint16_t pulse_width,
 	uint8_t redge_msb, fedge_msb, lsb;
 	uint16_t reg_redge, reg_fedge, reg_lsb;
 
+	if (desc->dev_id < ID_ADP1050 || desc->dev_id > ID_ADP1051)
+		return -EINVAL;
+
 	if (no_os_field_get(ADP1050_FLOAT_FREQ_MASK, desc->freq)
 	    && pulse_width + pulse_start > ADP1050_MAX_PERIOD_FLOAT(desc->freq))
 		return -EINVAL;
@@ -351,44 +355,76 @@ int adp1050_pwm_duty_cycle(struct adp1050_desc *desc, uint16_t pulse_width,
 		fedge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_width + pulse_start);
 		redge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_start);
 		lsb = no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
-				      pulse_width + pulse_start) | no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
-						      pulse_start);
+				pulse_width + pulse_start) | no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
+						pulse_start);
 
 		reg_fedge = ADP1050_OUTA_FALLING_EDGE_TIMING;
 		reg_redge = ADP1050_OUTA_RISING_EDGE_TIMING;
 		reg_lsb = ADP1050_OUTA_RISING_FALLING_TIMING_LSB;
-
+		
 		break;
 	case ADP1050_OUTB:
 		fedge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_width + pulse_start);
 		redge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_start);
 		lsb = no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
-				      pulse_width + pulse_start) | no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
-						      pulse_start);
+				pulse_width + pulse_start) | no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
+						pulse_start);
 
 		reg_fedge = ADP1050_OUTB_FALLING_EDGE_TIMING;
 		reg_redge = ADP1050_OUTB_RISING_EDGE_TIMING;
 		reg_lsb = ADP1050_OUTB_RISING_FALLING_TIMING_LSB;
 
 		break;
+	case ADP1051_OUTC:
+		/* Available only for ADP1051 */
+		if (desc->dev_id == ID_ADP1050)
+			return -ENOSYS;
+
+		fedge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_width + pulse_start);
+		redge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_start);
+		lsb = no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
+				pulse_width + pulse_start) | no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
+						pulse_start);
+
+		reg_fedge = ADP1051_OUTC_FALLING_EDGE_TIMING;
+		reg_redge = ADP1051_OUTC_RISING_EDGE_TIMING;
+		reg_lsb = ADP1051_OUTC_RISING_FALLING_TIMING_LSB;
+
+		break;
+	case ADP1051_OUTD:
+		/* Available only for ADP1051/5 */
+		if (desc->dev_id == ID_ADP1050)
+			return -ENOSYS;
+
+		fedge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_width + pulse_start);
+		redge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_start);
+		lsb = no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
+				pulse_width + pulse_start) | no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
+						pulse_start);
+
+		reg_fedge = ADP1051_OUTD_FALLING_EDGE_TIMING;
+		reg_redge = ADP1051_OUTD_RISING_EDGE_TIMING;
+		reg_lsb = ADP1051_OUTD_RISING_FALLING_TIMING_LSB;
+		
+		break;
 	case ADP1050_SR1:
 		redge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_width + pulse_start);
 		fedge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_start);
 		lsb = no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
-				      pulse_width + pulse_start) | no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
-						      pulse_start);
+				pulse_width + pulse_start) | no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
+						pulse_start);
 
 		reg_fedge = ADP1050_SR1_FALLING_EDGE_TIMING;
 		reg_redge = ADP1050_SR1_RISING_EDGE_TIMING;
 		reg_lsb = ADP1050_SR1_RISING_FALLING_TIMING_LSB;
-
+		
 		break;
 	case ADP1050_SR2:
 		redge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_width + pulse_start);
 		fedge_msb = no_os_field_get(ADP1050_EDGE_MSB_MASK, pulse_start);
 		lsb = no_os_field_get(ADP1050_RISING_EDGE_LSB_MASK,
-				      pulse_width + pulse_start) | no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
-						      pulse_start);
+				pulse_width + pulse_start) | no_os_field_get(ADP1050_FALLING_EDGE_LSB_MASK,
+						pulse_start);
 
 		reg_fedge = ADP1050_SR2_FALLING_EDGE_TIMING;
 		reg_redge = ADP1050_SR2_RISING_EDGE_TIMING;
@@ -427,17 +463,17 @@ int adp1050_pwm_modulation(struct adp1050_desc *desc, enum adp1050_mod mod,
 	uint32_t mask, reg;
 
 	switch (mod) {
-	case ADP1050_OUTA_SR1_FALLING_MOD:
-		mask = ADP1050_OUTA_SR1_FALLING_MOD_MASK;
+	case ADP1050_OUTA_OUTC_SR1_FALLING_MOD:
+		mask = ADP1050_OUTA_OUTC_SR1_FALLING_MOD_MASK;
 		break;
-	case ADP1050_OUTA_SR1_RISING_MOD:
-		mask = ADP1050_OUTA_SR1_RISING_MOD_MASK;
+	case ADP1050_OUTA_OUTC_SR1_RISING_MOD:
+		mask = ADP1050_OUTA_OUTC_SR1_RISING_MOD_MASK;
 		break;
-	case ADP1050_OUTB_SR2_FALLING_MOD:
-		mask = ADP1050_OUTB_SR2_FALLING_MOD_MASK;
+	case ADP1050_OUTB_OUTD_SR2_FALLING_MOD:
+		mask = ADP1050_OUTB_OUTD_SR2_FALLING_MOD_MASK;
 		break;
-	case ADP1050_OUTB_SR2_RISING_MOD:
-		mask = ADP1050_OUTB_SR2_RISING_MOD_MASK;
+	case ADP1050_OUTB_OUTD_SR2_RISING_MOD:
+		mask = ADP1050_OUTB_OUTD_SR2_RISING_MOD_MASK;
 		break;
 	default:
 		return -EINVAL;
@@ -447,6 +483,14 @@ int adp1050_pwm_modulation(struct adp1050_desc *desc, enum adp1050_mod mod,
 	case ADP1050_OUTA:
 	case ADP1050_OUTB:
 		reg = ADP1050_OUTA_OUTB_MODULATION_SETTINGS;
+		break;
+	case ADP1051_OUTC:
+	case ADP1051_OUTD:
+		/* Available only for ADP1051 */
+		if (desc->dev_id == ID_ADP1050)
+			return -ENOSYS;
+
+		reg = ADP1051_OUTC_OUTD_MODULATION_SETTINGS;
 		break;
 	case ADP1050_SR1:
 	case ADP1050_SR2:
@@ -493,6 +537,20 @@ int adp1050_set_pwm(struct adp1050_desc *desc, enum adp1050_channel chan,
 	case ADP1050_OUTB:
 		reg_val = ADP1050_OUTB_ON;
 		break;
+	case ADP1051_OUTC:
+		/* Available only for ADP1051/5 */
+		if (desc->dev_id == ID_ADP1050)
+			return -ENOSYS;
+		
+		reg_val = ADP1051_OUTC_ON;
+		break;
+	case ADP1051_OUTD:
+		/* Available only for ADP1051/5 */
+		if (desc->dev_id == ID_ADP1050)
+			return -ENOSYS;
+		
+		reg_val = ADP1051_OUTD_ON;
+		break;
 	case ADP1050_SR1:
 		reg_val = ADP1050_SR1_ON;
 		break;
@@ -509,7 +567,7 @@ int adp1050_set_pwm(struct adp1050_desc *desc, enum adp1050_channel chan,
 	ret = adp1050_write(desc, ADP1050_PWM_OUTPUT_DISABLE, reg_val, 1);
 	if (ret)
 		return ret;
-
+		
 	return adp1050_write(desc, ADP1050_GO_COMMANDS, ADP1050_VOUT_GO, 1);
 }
 
@@ -597,8 +655,8 @@ int adp1050_set_open_loop(struct adp1050_desc *desc, uint8_t rising_edge,
 {
 	int ret;
 
-	if ((chan == ADP1050_OUTA || chan == ADP1050_OUTB)
-	    && falling_edge < rising_edge)
+	if ((chan == ADP1050_OUTA || chan == ADP1050_OUTB || chan == ADP1051_OUTC 
+		|| chan == ADP1051_OUTD) && falling_edge < rising_edge)
 		return -EINVAL;
 
 	if ((chan == ADP1050_SR1 || chan == ADP1050_SR2) && rising_edge < falling_edge)
@@ -616,6 +674,15 @@ int adp1050_set_open_loop(struct adp1050_desc *desc, uint8_t rising_edge,
 	switch (chan) {
 	case ADP1050_OUTA:
 	case ADP1050_OUTB:
+		ret = adp1050_pwm_duty_cycle(desc, falling_edge, falling_edge - rising_edge,
+					     chan);
+		break;
+	case ADP1051_OUTC:
+	case ADP1051_OUTD:
+		/* Available only for ADP1051/5 */
+		if (desc->dev_id == ID_ADP1050)
+			return -ENOSYS;
+
 		ret = adp1050_pwm_duty_cycle(desc, falling_edge, falling_edge - rising_edge,
 					     chan);
 		break;
@@ -640,7 +707,8 @@ int adp1050_set_open_loop(struct adp1050_desc *desc, uint8_t rising_edge,
 	if (ret)
 		return ret;
 
-	if (chan == ADP1050_OUTA || chan == ADP1050_OUTB) {
+	if (chan == ADP1050_OUTA || chan == ADP1050_OUTB
+		|| chan == ADP1051_OUTC || chan == ADP1051_OUTD) {
 		ret = adp1050_write(desc, ADP1050_SOFT_START_SETTING_OL,
 				    ADP1050_OL_SS_64_CYCLES, 1);
 		if (ret)
@@ -1088,6 +1156,9 @@ int adp1050_init(struct adp1050_desc **desc,
 	struct adp1050_desc *descriptor;
 	int ret;
 
+	if (init_param->dev_id < ID_ADP1050 || init_param->dev_id > ID_ADP1051)
+		return -EINVAL;
+
 	descriptor = (struct adp1050_desc *)no_os_calloc(sizeof(*descriptor), 1);
 	if (!descriptor)
 		return -ENOMEM;
@@ -1153,6 +1224,7 @@ int adp1050_init(struct adp1050_desc **desc,
 
 	descriptor->loop = ADP1050_CLOSE_LOOP;
 	descriptor->freq = ADP1050_49KHZ;
+	descriptor->dev_id = init_param->dev_id;
 
 	*desc = descriptor;
 

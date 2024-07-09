@@ -41,10 +41,12 @@
 #include "common_data.h"
 #include "no_os_print_log.h"
 #include "iio_app.h"
+#include "adp1050.h"
 
 int iio_example_main()
 {
-	int ret;
+	int id, ret;
+	char dev_name[7] = "adp105 ";
 
 	struct adp1050_iio_desc *adp1050_iio_desc;
 	struct adp1050_iio_desc_init_param adp1050_iio_ip = {
@@ -61,9 +63,24 @@ int iio_example_main()
 	if (ret)
 		goto exit;
 
+	switch ((int) adp1050_iio_desc->adp1050_desc->dev_id) {
+		case ID_ADP1050:
+			dev_name[6] = '0';
+			break;
+		case ID_ADP1051:
+			dev_name[6] = '1';
+			break;
+		case ID_ADP1055:
+			dev_name[6] = '5';
+			break;
+		default:
+			dev_name[6] = '0';
+			break;
+	}
+	
 	struct iio_app_device iio_devices[] = {
-		{
-			.name = "adp1050",
+		{		
+			.name = dev_name,
 			.dev = adp1050_iio_desc,
 			.dev_descriptor = adp1050_iio_desc->iio_dev,
 		}

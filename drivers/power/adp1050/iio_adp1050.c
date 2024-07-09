@@ -63,6 +63,12 @@
 #define ADP1050_IIO_ENABLE_MASK(x)		NO_OS_BIT(x)
 #define ADP1050_IIO_PULSE_DEFAULT_VAL		0x05
 
+static const char *const adp1050_id[] = {
+	[ID_ADP1050] = "adp1050",
+	[ID_ADP1051] = "adp1051",
+	[ID_ADP1055] = "adp1055",
+};
+
 static const char *const adp1050_enable_avail[2] = {
 	"Disabled", "Enabled"
 };
@@ -279,6 +285,11 @@ static int adp1050_iio_write_enable(void *dev, char *buf, uint32_t len,
 				    const struct iio_ch_info *channel,
 				    intptr_t priv);
 
+// static int adp1050_iio_read_connected_device(void *dev, char *buf, uint32_t len,
+// 		const struct iio_ch_info *channel,
+// 		intptr_t priv);
+
+
 static struct iio_attribute adp1050_input_attrs[] = {
 	{
 		.name = "raw",
@@ -413,6 +424,10 @@ static struct iio_attribute adp1050_global_attrs[] = {
 		.priv = ADP1050_IIO_PULSE_ENABLE,
 		.shared = IIO_SHARED_BY_ALL
 	},
+	// {
+	// 	.name = "connected_device",
+	// 	.show = adp1050_iio_read_connected_device,
+	// },
 	END_ATTRIBUTES_ARRAY
 };
 
@@ -1199,6 +1214,26 @@ static int adp1050_iio_write_enable(void *dev, char *buf, uint32_t len,
 		return -EINVAL;
 	}
 }
+
+/**
+ * @brief Handles the write request for enable attribute.
+ * @param dev     - The iio device structure.
+ * @param buf	  - Command buffer to be filled with requested data.
+ * @param len     - Length of the received command buffer in bytes.
+ * @param channel - Command channel info.
+ * @param priv    - Command attribute id.
+ * @return ret    - Result of the reading procedure.
+ * 		    In case of success, the size of the read data is returned.
+*/
+// static int adp1050_iio_read_connected_device(void *dev, char *buf, uint32_t len,
+// 				    const struct iio_ch_info *channel,
+// 				    intptr_t priv)
+// {
+// 	struct adp1050_iio_desc *iio_adp1050 = dev;
+// 	struct adp1050_desc *adp1050 = iio_adp1050->adp1050_desc;
+
+// 	return sprintf(buf, "%s", adp1050_id[adp1050->dev_id]);
+// }
 
 /**
  * @brief Initializes the ADP1050 IIO descriptor.
