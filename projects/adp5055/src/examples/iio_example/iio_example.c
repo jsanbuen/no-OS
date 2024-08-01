@@ -1,7 +1,7 @@
 /***************************************************************************//**
- *   @file   iio_adp5055.h
- *   @brief  Header file for the ADP5055 IIO Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @file   iio_example.c
+ *   @brief  IIO example source file for adp5055 project.
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -36,33 +36,52 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_ADP5055_H
-#define IIO_ADP5055_H
+#include "iio_example.h"
+#include "iio_adp5055.h"
+#include "common_data.h"
+#include "no_os_print_log.h"
+#include "iio_app.h"
 
-#include <stdbool.h>
-#include "iio.h"
-#include "adp5055.h"
+int iio_example_main()
+{
+	int ret;
 
-/**
- * @brief Structure holding the ADP5055 IIO device descriptor
-*/
-struct adp5055_iio_desc {
-	struct adp5055_desc *adp5055_desc;
-	struct iio_device *iio_dev;
-};
+	struct adp5055_iio_desc *adp5055_iio_desc;
+	struct adp5055_iio_desc_init_param adp5055_iio_ip = {
+		.adp5055_init_param = &adp5055_ip,
+	};
 
-/**
- * @brief Structure holding the ADP5055 IIO initalization parameter.
-*/
-struct adp5055_iio_desc_init_param {
-	struct adp5055_init_param *adp5055_init_param;
-};
+	struct iio_app_desc *app;
+	struct iio_app_init_param app_init_param = { 0 };
 
-/** Initializes the ADP5055 IIO descriptor. */
-int adp5055_iio_init(struct adp5055_iio_desc **iio_desc,
-		     struct adp5055_iio_desc_init_param *init_param);
+	ret = adp5055_iio_init(&adp5055_iio_desc, &adp5055_iio_ip);
+	if (ret)
+		goto exit;
 
-/** Free resources allocated by the initialization function. */
-int adp5055_iio_remove(struct adp5055_iio_desc *iio_desc);
+	struct iio_app_device iio_devices[] = {
+		{
+			.name = "adp5055",
+			.dev = adp5055_iio_desc,
+			.dev_descriptor = adp5055_iio_desc->iio_dev,
+		}
+	};
 
-#endif /* IIO_ADP5055_H */
+	app_init_param.devices = iio_devices;
+	app_init_param.nb_devices = NO_OS_ARRAY_SIZE(iio_devices);
+	app_init_param.uart_init_params = adp5055_uart_ip;
+
+	ret = iio_app_init(&app, app_init_param);
+	if (ret)
+		goto remove_iio_adp5055;
+
+	ret = iio_app_run(app);
+
+	iio_app_remove(app);
+
+remove_iio_adp5055:
+	adp5055_iio_remove(adp5055_iio_desc);
+exit:
+	if (ret)
+		pr_info("Error!\n");
+	return ret;
+}

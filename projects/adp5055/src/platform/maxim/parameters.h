@@ -1,7 +1,7 @@
 /***************************************************************************//**
- *   @file   iio_adp5055.h
- *   @brief  Header file for the ADP5055 IIO Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @file   parameters.h
+ *   @brief  Definition of Maxim platform data used by adp5055 project.
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -36,33 +36,32 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_ADP5055_H
-#define IIO_ADP5055_H
+#ifndef __PARAMETERS_H__
+#define __PARAMETERS_H__
 
-#include <stdbool.h>
-#include "iio.h"
-#include "adp5055.h"
+#include "maxim_irq.h"
+#include "maxim_i2c.h"
+#include "maxim_gpio.h"
+#include "maxim_uart.h"
+#include "maxim_uart_stdio.h"
 
-/**
- * @brief Structure holding the ADP5055 IIO device descriptor
-*/
-struct adp5055_iio_desc {
-	struct adp5055_desc *adp5055_desc;
-	struct iio_device *iio_dev;
-};
+#ifdef IIO_SUPPORT
+#define INTC_DEVICE_ID		0
+#endif
 
-/**
- * @brief Structure holding the ADP5055 IIO initalization parameter.
-*/
-struct adp5055_iio_desc_init_param {
-	struct adp5055_init_param *adp5055_init_param;
-};
+#define UART_DEVICE_ID		0
+#define UART_IRQ_ID		UART0_IRQn
+#define UART_BAUDRATE		57600
+#define	UART_OPS		&max_uart_ops
+#define UART_EXTRA		&adp5055_uart_extra
 
-/** Initializes the ADP5055 IIO descriptor. */
-int adp5055_iio_init(struct adp5055_iio_desc **iio_desc,
-		     struct adp5055_iio_desc_init_param *init_param);
+#define I2C_DEVICE_ID		0
+#define I2C_MAX_SPEED		100000
+#define I2C_OPS			&max_i2c_ops
+#define I2C_EXTRA		&adp5055_i2c_extra
 
-/** Free resources allocated by the initialization function. */
-int adp5055_iio_remove(struct adp5055_iio_desc *iio_desc);
+extern struct max_uart_init_param adp5055_uart_extra;
+extern struct max_i2c_init_param adp5055_i2c_extra;
+extern struct max_gpio_init_param adp5055_pg_alt_extra;
 
-#endif /* IIO_ADP5055_H */
+#endif /* __PARAMETERS_H__ */

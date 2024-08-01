@@ -1,7 +1,7 @@
 /***************************************************************************//**
- *   @file   iio_adp5055.h
- *   @brief  Header file for the ADP5055 IIO Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @file   basic_example.c
+ *   @brief  Basic example source file for adp5055 project.
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -36,33 +36,75 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_ADP5055_H
-#define IIO_ADP5055_H
-
-#include <stdbool.h>
-#include "iio.h"
+#include "common_data.h"
+#include "basic_example.h"
+#include "no_os_delay.h"
+#include "no_os_i2c.h"
+#include "no_os_print_log.h"
+#include "no_os_util.h"
+#include "no_os_pwm.h"
 #include "adp5055.h"
 
-/**
- * @brief Structure holding the ADP5055 IIO device descriptor
-*/
-struct adp5055_iio_desc {
+int basic_example_main()
+{
+	float f_dat;
+	int i, ret;
 	struct adp5055_desc *adp5055_desc;
-	struct iio_device *iio_dev;
-};
+	uint8_t data;
 
-/**
- * @brief Structure holding the ADP5055 IIO initalization parameter.
-*/
-struct adp5055_iio_desc_init_param {
-	struct adp5055_init_param *adp5055_init_param;
-};
+	ret = adp5055_init(&adp5055_desc, &adp5055_ip);
+	if (ret)
+		goto exit;
 
-/** Initializes the ADP5055 IIO descriptor. */
-int adp5055_iio_init(struct adp5055_iio_desc **iio_desc,
-		     struct adp5055_iio_desc_init_param *init_param);
+	for (i = 0; i < ADP5055_MAX_CHANNELS; i++) {
+		ret = adp5055_read_converted_vid(adp5055_desc, i + 1, &f_dat);
+		if (ret)
+			goto exit;
+		
+		pr_info("Read VID%d = %0.4f\n", i + 1, f_dat);
+	}
 
-/** Free resources allocated by the initialization function. */
-int adp5055_iio_remove(struct adp5055_iio_desc *iio_desc);
+	pr_info("\n\n");
 
-#endif /* IIO_ADP5055_H */
+	for (i = 0; i < ADP5055_MAX_CHANNELS; i++)
+		pr_info("Channel %d VOUT: %0.4f\n", i + 1, adp5055_desc->vout[i]);
+	
+	pr_info("\n\n");		
+
+	for (i = 0; i < ADP5055_MAX_CHANNELS; i++) {
+		ret = adp5055_set_converted_vid(adp5055_desc, i + 1, new_vid[i]);
+		if (ret)
+			goto exit;
+
+		pr_info("Configured VID%d to %0.4f\n", i + 1, new_vid[i]);
+	}
+
+	no_os_mdelay(5000);
+	
+	pr_info("\n\n");
+	
+	for (i = 0; i < ADP5055_MAX_CHANNELS; i++)
+		pr_info("New Channel %d VOUT: %0.4f\n", i + 1, adp5055_desc->vout[i]);
+
+	pr_info("\n\n");
+
+	ret = adp5055_read(adp5055_desc, ADP5055_STATUS_CML, &data, 1);
+	if (ret)
+		goto exit;
+
+	pr_info("STATUS_CML: 0x%x\n", data);
+
+	ret = adp5055_read(adp5055_desc, ADP5055_STATUS_LCH, &data, 1);
+	if (ret)
+		goto exit;
+
+	pr_info("STATUS_LCH: 0x%x\n", data);
+	
+exit:
+	if (ret)
+		pr_info("Error\n");
+
+	adp5055_remove(adp5055_desc);
+
+	return ret;
+}

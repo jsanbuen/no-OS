@@ -1,7 +1,7 @@
 /***************************************************************************//**
- *   @file   iio_adp5055.h
- *   @brief  Header file for the ADP5055 IIO Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @file   main.c
+ *   @brief  Main file for Mbed platform of adp5055 project.
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -36,33 +36,43 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_ADP5055_H
-#define IIO_ADP5055_H
+#include "platform_includes.h"
+#include "common_data.h"
+#include "no_os_error.h"
 
-#include <stdbool.h>
-#include "iio.h"
-#include "adp5055.h"
+#ifdef BASIC_EXAMPLE
+#include "basic_example.h"
+#endif
 
-/**
- * @brief Structure holding the ADP5055 IIO device descriptor
-*/
-struct adp5055_iio_desc {
-	struct adp5055_desc *adp5055_desc;
-	struct iio_device *iio_dev;
-};
+#ifdef IIO_EXAMPLE
+#include "iio_example.h"
+#endif
 
-/**
- * @brief Structure holding the ADP5055 IIO initalization parameter.
-*/
-struct adp5055_iio_desc_init_param {
-	struct adp5055_init_param *adp5055_init_param;
-};
+int main()
+{
+	int ret = -EINVAL;
 
-/** Initializes the ADP5055 IIO descriptor. */
-int adp5055_iio_init(struct adp5055_iio_desc **iio_desc,
-		     struct adp5055_iio_desc_init_param *init_param);
+#ifdef BASIC_EXAMPLE
+	struct no_os_uart_desc *adp5055_uart_desc;
 
-/** Free resources allocated by the initialization function. */
-int adp5055_iio_remove(struct adp5055_iio_desc *iio_desc);
+	ret = no_os_uart_init(&adp5055_uart_desc, &adp5055_uart_ip);
+	if (ret)
+		return ret;
 
-#endif /* IIO_ADP5055_H */
+	no_os_uart_stdio(adp5055_uart_desc);
+	ret = basic_example_main();
+#endif
+
+#ifdef IIO_EXAMPLE
+	ret = iio_example_main();
+#endif
+
+#if (BASIC_EXAMPLE + IIO_EXAMPLE == 0)
+#error At least one example has to be selected using y value in Makefile.
+#elif (BASIC_EXAMPLE + IIO_EXAMPLE > 1)
+#error Selected example projects cannot be enabled at the same time. \
+Please enable only one example and re-build the project.
+#endif
+
+	return ret;
+}

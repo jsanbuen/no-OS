@@ -1,7 +1,7 @@
 /***************************************************************************//**
- *   @file   iio_adp5055.h
- *   @brief  Header file for the ADP5055 IIO Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @file   parameters.c
+ *   @brief  Definition of Maxim platform data used by adp5055 project.
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -36,33 +36,20 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_ADP5055_H
-#define IIO_ADP5055_H
+#include "parameters.h"
 
-#include <stdbool.h>
-#include "iio.h"
-#include "adp5055.h"
-
-/**
- * @brief Structure holding the ADP5055 IIO device descriptor
-*/
-struct adp5055_iio_desc {
-	struct adp5055_desc *adp5055_desc;
-	struct iio_device *iio_dev;
+struct max_uart_init_param adp5055_uart_extra = {
+#if (TARGET_NUM == 32670)
+	.flow = MAX_UART_FLOW_DIS,
+#else
+	.flow = UART_FLOW_DIS,
+#endif
 };
 
-/**
- * @brief Structure holding the ADP5055 IIO initalization parameter.
-*/
-struct adp5055_iio_desc_init_param {
-	struct adp5055_init_param *adp5055_init_param;
+struct max_i2c_init_param adp5055_i2c_extra = {
+	.vssel = MXC_GPIO_VSSEL_VDDIOH
 };
 
-/** Initializes the ADP5055 IIO descriptor. */
-int adp5055_iio_init(struct adp5055_iio_desc **iio_desc,
-		     struct adp5055_iio_desc_init_param *init_param);
-
-/** Free resources allocated by the initialization function. */
-int adp5055_iio_remove(struct adp5055_iio_desc *iio_desc);
-
-#endif /* IIO_ADP5055_H */
+struct max_gpio_init_param adp5055_pg_alt_extra = {
+	.vssel = MXC_GPIO_VSSEL_VDDIOH
+};

@@ -1,7 +1,7 @@
 /***************************************************************************//**
- *   @file   iio_adp5055.h
- *   @brief  Header file for the ADP5055 IIO Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @file   parameters.h
+ *   @brief  Definition of Mbed platform data used by adp5055 project.
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -36,33 +36,31 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_ADP5055_H
-#define IIO_ADP5055_H
+#ifndef __PARAMETERS_H__
+#define __PARAMETERS_H__
 
-#include <stdbool.h>
-#include "iio.h"
-#include "adp5055.h"
+#include <PinNames.h>
+#include "mbed_i2c.h"
+#include "mbed_gpio.h"
+#include "mbed_uart.h"
 
-/**
- * @brief Structure holding the ADP5055 IIO device descriptor
-*/
-struct adp5055_iio_desc {
-	struct adp5055_desc *adp5055_desc;
-	struct iio_device *iio_dev;
-};
+#define UART_TX_PIN	        CONSOLE_TX
+#define	UART_RX_PIN	        CONSOLE_RX
+#define UART_IRQ_ID             0
+#define UART_DEVICE_ID	        0
+#define UART_BAUDRATE		57600
+#define UART_OPS	        &mbed_uart_ops
+#define UART_EXTRA		&adp5055_uart_extra
 
-/**
- * @brief Structure holding the ADP5055 IIO initalization parameter.
-*/
-struct adp5055_iio_desc_init_param {
-	struct adp5055_init_param *adp5055_init_param;
-};
+#define I2C_SCL                 ARDUINO_UNO_D15
+#define I2C_SDA                 ARDUINO_UNO_D14
+#define I2C_DEVICE_ID		0
+#define I2C_MAX_SPEED		100000
+#define I2C_OPS                 &mbed_i2c_ops
+#define I2C_EXTRA		&adp5055_i2c_extra
 
-/** Initializes the ADP5055 IIO descriptor. */
-int adp5055_iio_init(struct adp5055_iio_desc **iio_desc,
-		     struct adp5055_iio_desc_init_param *init_param);
+extern struct mbed_uart_init_param adp5055_uart_extra;
+extern struct mbed_i2c_init_param adp5055_i2c_extra;
+extern struct mbed_gpio_init_param adp5055_pg_alt_extra;
 
-/** Free resources allocated by the initialization function. */
-int adp5055_iio_remove(struct adp5055_iio_desc *iio_desc);
-
-#endif /* IIO_ADP5055_H */
+#endif /* __PARAMETERS_H__ */

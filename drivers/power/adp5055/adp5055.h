@@ -1,7 +1,7 @@
 /***************************************************************************//**
  *   @file   adp5055.h
  *   @brief  Header file for the ADP5055 Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com)
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -48,7 +48,7 @@
 #include "no_os_util.h"
 #include "no_os_units.h"
 
-#define ADP5055_EXTENDED_COMMAND		0x80
+#define ADP5055_EXTENDED_COMMAND		0xE2
 #define ADP5055_MSB_MASK			NO_OS_GENMASK(15, 8)
 #define ADP5055_LSB_MASK			NO_OS_GENMASK(7, 0)
 
@@ -137,13 +137,50 @@
 /* Others */
 #define ADP5055_MIN_CHANNELS			1
 #define ADP5055_MAX_CHANNELS			3
-#define ADP5055_VOUT_OFFSET			408e-3
-#define ADP5055_VOUT_STEP			1.5e-3
+#define ADP5055_VID_OFFSET			408e-3
+#define ADP5055_VID_STEP			1.5e-3
 #define ADP5055_VID_LOW_LIM_OFFSET		-190.5e-3
 #define ADP5055_VID_HIGH_LIM_OFFSET		192e-3
 #define ADP5055_VID_LIM_STEP			12e-3
+#define ADP5055_VID_DEFAULT			600e-3
+#define VREF_TRIM				0
 
 /* Enums */
+enum adp5055_cfg_valid_resistances {
+	ADP5055_ZERO_OHM,
+	ADP5055_14P3KOHM,
+	ADP5055_16P9KOHM,
+	ADP5055_20KOHM,
+	ADP5055_23P7KOHM,
+	ADP5055_32P4KOHM,
+	ADP5055_39P2KOHM,
+	ADP5055_47P5KOHM,
+	ADP5055_57P6KOHM,
+	ADP5055_71P5KOHM,
+	ADP5055_90P9KOHM,
+	ADP5055_127KOHM,
+	ADP5055_200KOHM,
+	ADP5055_511KOHM,
+	ADP5055_OPEN,	
+};
+
+enum adp5055_output_capability {
+	ADP5055_7A,
+	ADP5055_3A,
+	ADP5055_3P5A,
+	ADP5055_1P5A,
+	ADP5055_INTERLEAVED_PARALLEL_14A,
+	ADP5055_IN_PHASE_PARALLEL_14A,
+};
+
+enum adp5055_status_cml_errors {
+	ADP5055_CMD_ERR,
+	ADP5055_DATA_ERR,
+	ADP5055_PEC_ERR,
+	ADP5055_CRC_ERR,
+	ADP5055_COMM_ERR,
+};
+
 enum adp5055_en_mode {
 	ADP5055_ENX_CONTROL,
 	ADP5055_CHX_CONTROL,
@@ -187,13 +224,24 @@ enum adp5055_fast_transient_sensitivity {
 	ADP5055_2P5_WINDOW_5GM,
 };
 
+enum adp5055_gpio_mode {
+	ADP5055_GPIO_SYNC_MODE,
+	ADP5055_GPIO_CLOCK_OUT,
+};
+
 /**
  * @brief Initialization parameter for the ADP5055 device.
 */
 struct adp5055_init_param {
 	struct no_os_i2c_init_param *i2c_param;
-	uint8_t vid_low[ADP5055_MAX_CHANNELS];
-	uint8_t vid_high[ADP5055_MAX_CHANNELS];
+	struct no_os_gpio_init_param *en_param[ADP5055_MAX_CHANNELS];
+	struct no_os_gpio_init_param *pwrgd_gpio_param;
+	enum adp5055_cfg_valid_resistances rcfg1;
+	enum adp5055_cfg_valid_resistances rcfg2;
+	float *vid_low;
+	float *vid_high;
+	float rtop[ADP5055_MAX_CHANNELS];
+	float rbottom[ADP5055_MAX_CHANNELS];
 };
 
 /**
@@ -201,8 +249,16 @@ struct adp5055_init_param {
 */
 struct adp5055_desc {
 	struct no_os_i2c_desc *i2c_desc;
-	uint8_t vid_low[ADP5055_MAX_CHANNELS];
-	uint8_t vid_high[ADP5055_MAX_CHANNELS];
+	struct no_os_gpio_desc *en_desc[ADP5055_MAX_CHANNELS];
+	struct no_os_gpio_desc *pwrgd_gpio_desc;
+	enum adp5055_output_capability out_capability[ADP5055_MAX_CHANNELS];
+	enum adp5055_gpio_mode sync_mode;
+	float vid[ADP5055_MAX_CHANNELS];
+	float vout[ADP5055_MAX_CHANNELS];
+	uint16_t tset_us;
+	uint8_t *vid_low;
+	uint8_t *vid_high;
+	bool is_fast_transient_enabled;
 };
 
 /** Send command to ADP5055 device. */
@@ -223,10 +279,123 @@ int adp5055_init(struct adp5055_desc **desc,
 /** Remove resources allocated by the init function. */
 int adp5055_remove(struct adp5055_desc *desc);
 
-
 /** Read PEC capability from ADP5055 device. */
 int adp5055_read_pec_capability(struct adp5055_desc *desc, bool *pec);
 
+int adp5055_read_max_bus_speed(struct adp5055_desc *desc, bool *is_400kHz);
 
+int adp5055_read_smb_alert_capability(struct adp5055_desc *desc, bool *smb_alert);
+
+int adp5055_read_status_cml(struct adp5055_desc *desc, enum adp5055_status_cml_errors status,
+			bool *is_err_raised);
+
+int adp5055_read_model_id(struct adp5055_desc *desc, uint8_t *model_id);
+
+int adp5055_read_channel_enable(struct adp5055_desc *desc, uint8_t channel,
+			 bool *is_enabled);
+
+int adp5055_set_channel_enable(struct adp5055_desc *desc, uint8_t channel,
+			 bool is_enabled);
+
+int adp5055_gpio_set_enable(struct adp5055_desc *desc, uint8_t channel, bool is_enabled);
+
+int adp5055_set_vid_go(struct adp5055_desc *desc, uint8_t channel);
+
+int adp5055_read_vidx_execution_mode(struct adp5055_desc *desc, bool *is_write_init);
+
+int adp5055_set_vidx_execution_mode(struct adp5055_desc *desc, bool is_write_init);
+
+int adp5055_read_en_mode(struct adp5055_desc *desc, enum adp5055_en_mode *mode);
+
+int adp5055_set_en_mode(struct adp5055_desc *desc, enum adp5055_en_mode mode);
+
+int adp5055_read_ocp_blanking(struct adp5055_desc *desc, bool *ocp_blanking);
+
+int adp5055_set_ocp_blanking(struct adp5055_desc *desc, bool ocp_blanking);
+
+int adp5055_read_psm_on(struct adp5055_desc *desc, uint8_t channel, bool *psm_on);
+
+int adp5055_set_psm_on(struct adp5055_desc *desc, uint8_t channel, bool psm_on);
+
+int adp5055_read_dschg_on(struct adp5055_desc *desc, uint8_t channel, bool *dschg_on);
+
+int adp5055_set_dschg_on(struct adp5055_desc *desc, uint8_t channel, bool dschg_on);
+
+int adp5055_read_disable_delay(struct adp5055_desc *desc, uint8_t channel,
+	enum adp5055_disable_delays *delay);
+
+int adp5055_set_disable_delay(struct adp5055_desc *desc, uint8_t channel,
+	enum adp5055_disable_delays delay);
+
+int adp5055_read_enable_delay(struct adp5055_desc *desc, uint8_t channel,
+	enum adp5055_enable_delays *delay);
+
+int adp5055_set_enable_delay(struct adp5055_desc *desc, uint8_t channel,
+	enum adp5055_enable_delays delay);
+
+int adp5055_read_raw_vid(struct adp5055_desc *desc, uint8_t channel, uint8_t *vid);
+
+int adp5055_read_converted_vid(struct adp5055_desc *desc, uint8_t channel, float *vid);
+
+int adp5055_set_raw_vid(struct adp5055_desc *desc, uint8_t channel, uint8_t vid);
+
+int adp5055_set_converted_vid(struct adp5055_desc *desc, uint8_t channel, float vid);
+
+int adp5055_read_dvs_intval(struct adp5055_desc *desc, uint8_t channel,
+		enum adp5055_dvs_interval *dvs_intval);
+
+int adp5055_set_dvs_intval(struct adp5055_desc *desc, uint8_t channel,
+		enum adp5055_dvs_interval dvs_intval);
+
+int adp5055_read_vid_high_lim(struct adp5055_desc *desc, uint8_t channel, uint8_t *lim);
+
+int adp5055_read_converted_vid_high_lim(struct adp5055_desc *desc, uint8_t channel, float *lim);
+
+int adp5055_set_vid_high_lim(struct adp5055_desc *desc, uint8_t channel, uint8_t lim);
+
+int adp5055_set_converted_vid_high_lim(struct adp5055_desc *desc, uint8_t channel, float lim);
+
+int adp5055_read_vid_low_lim(struct adp5055_desc *desc, uint8_t channel, uint8_t *lim);
+
+int adp5055_read_converted_vid_low_lim(struct adp5055_desc *desc, uint8_t channel, float *lim);
+
+int adp5055_set_vid_low_lim(struct adp5055_desc *desc, uint8_t channel, uint8_t lim);
+
+int adp5055_set_converted_vid_low_lim(struct adp5055_desc *desc, uint8_t channel, float lim);
+
+int adp5055_read_fast_transient_settings(struct adp5055_desc *desc, uint8_t channel,
+	enum adp5055_fast_transient_sensitivity *ft_cfg);
+
+int adp5055_set_fast_transient_settings(struct adp5055_desc *desc, uint8_t channel,
+	enum adp5055_fast_transient_sensitivity ft_cfg);
+
+int adp5055_read_pwrgd_delay(struct adp5055_desc *desc, bool *pwrgd_delay_enabled);
+
+int adp5055_set_pwrgd_delay(struct adp5055_desc *desc, bool pwrgd_delay_enabled);
+
+int adp5055_read_pg_mask(struct adp5055_desc *desc, uint8_t channel, bool *is_masked);
+
+int adp5055_set_pg_mask(struct adp5055_desc *desc, uint8_t channel, bool is_masked);
+
+int adp5055_read_pwrgd_status(struct adp5055_desc *desc, uint8_t channel, 
+	bool *is_out_nominal);
+
+int adp5055_read_init_proc_latch_status(struct adp5055_desc *desc, bool *int_lch);
+
+int adp5055_clear_init_proc_latch_status(struct adp5055_desc *desc);
+
+int adp5055_read_over_current_hiccup_latch_status(struct adp5055_desc *desc, uint8_t channel, 
+		bool *hiccup);
+
+int adp5055_clear_over_current_hiccup(struct adp5055_desc *desc, uint8_t channel);
+
+int adp5055_read_thermal_shutdown_latch_status(struct adp5055_desc *desc, bool *tsd_lch);
+
+int adp5055_clear_thermal_shutdown_latch_status(struct adp5055_desc *desc);
+
+int adp5055_read_power_good_latch_status(struct adp5055_desc *desc, uint8_t channel,
+		 bool *pg_lch);
+
+int adp5055_clear_power_good_latch_status(struct adp5055_desc *desc, uint8_t channel);
 
 #endif /** __ADP_5055_H__ */

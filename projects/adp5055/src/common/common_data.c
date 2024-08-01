@@ -1,7 +1,7 @@
 /***************************************************************************//**
- *   @file   iio_adp5055.h
- *   @brief  Header file for the ADP5055 IIO Driver
- *   @author Jose San Buenaventura (jose.sanbuenaventura@analog.com)
+ *   @file   common_data.c
+ *   @brief  Defines common data to be used by adp5055 examples.
+ *   @author Jose Ramon San Buenaventura (jose.sanbuenaventura@analog.com
 ********************************************************************************
  * Copyright 2024(c) Analog Devices, Inc.
  *
@@ -36,33 +36,36 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-#ifndef IIO_ADP5055_H
-#define IIO_ADP5055_H
+#include "common_data.h"
 
-#include <stdbool.h>
-#include "iio.h"
-#include "adp5055.h"
-
-/**
- * @brief Structure holding the ADP5055 IIO device descriptor
-*/
-struct adp5055_iio_desc {
-	struct adp5055_desc *adp5055_desc;
-	struct iio_device *iio_dev;
+struct no_os_uart_init_param adp5055_uart_ip = {
+	.device_id = UART_DEVICE_ID,
+	.irq_id = UART_IRQ_ID,
+	.asynchronous_rx = true,
+	.baud_rate = UART_BAUDRATE,
+	.size = NO_OS_UART_CS_8,
+	.parity = NO_OS_UART_PAR_NO,
+	.stop = NO_OS_UART_STOP_1_BIT,
+	.platform_ops = UART_OPS,
+	.extra = UART_EXTRA,
 };
 
-/**
- * @brief Structure holding the ADP5055 IIO initalization parameter.
-*/
-struct adp5055_iio_desc_init_param {
-	struct adp5055_init_param *adp5055_init_param;
+struct no_os_i2c_init_param adp5055_i2c_ip = {
+	.device_id = I2C_DEVICE_ID,
+	.max_speed_hz = I2C_MAX_SPEED,
+	.platform_ops = I2C_OPS,
+	.extra = I2C_EXTRA,
 };
 
-/** Initializes the ADP5055 IIO descriptor. */
-int adp5055_iio_init(struct adp5055_iio_desc **iio_desc,
-		     struct adp5055_iio_desc_init_param *init_param);
+struct adp5055_init_param adp5055_ip = {
+	.i2c_param = &adp5055_i2c_ip,
+	.rcfg1 = ADP5055_ZERO_OHM,
+	.rcfg2 = ADP5055_23P7KOHM,
+	.en_param = NULL,
+	.vid_low = NULL,
+	.vid_high = NULL,
+	.rtop = {20e3, 20e3, 20e3},
+	.rbottom = {30.1e3, 16.9e3, 10e3},
+};
 
-/** Free resources allocated by the initialization function. */
-int adp5055_iio_remove(struct adp5055_iio_desc *iio_desc);
-
-#endif /* IIO_ADP5055_H */
+float new_vid[ADP5055_MAX_CHANNELS] = {0.7905, 0.7905, 0.7905};
