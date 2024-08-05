@@ -57,17 +57,13 @@
 #define ADP1050_IIO_OUTPUT_CHANNEL(x)		((x) - 4)
 #define ADP1050_IIO_OUTA_DUTY_CYCLE_REPORTING	NO_OS_BIT(2)
 #define ADP1050_IIO_OUTB_DUTY_CYCLE_REPORTING	NO_OS_BIT(3)
+#define ADP1051_IIO_OUTC_DUTY_CYCLE_REPORTING	NO_OS_BIT(4)
+#define ADP1051_IIO_OUTD_DUTY_CYCLE_REPORTING	NO_OS_BIT(5)
 #define ADP1050_IIO_OUTA_OUTB_MASK		NO_OS_GENMASK(1, 0)
 #define ADP1050_IIO_SR1_SR2_MASK		NO_OS_GENMASK(5, 4)
 #define ADP1050_IIO_OUT_MASK			NO_OS_GENMASK(3, 0)
 #define ADP1050_IIO_ENABLE_MASK(x)		NO_OS_BIT(x)
 #define ADP1050_IIO_PULSE_DEFAULT_VAL		0x05
-
-static const char *const adp1050_id[] = {
-	[ID_ADP1050] = "adp1050",
-	[ID_ADP1051] = "adp1051",
-	[ID_ADP1055] = "adp1055",
-};
 
 static const char *const adp1050_enable_avail[2] = {
 	"Disabled", "Enabled"
@@ -207,7 +203,9 @@ enum adp1050_iio_output_chan_type {
 	ADP1050_IIO_OUTA_CHAN = 4,
 	ADP1050_IIO_OUTB_CHAN = 5,
 	ADP1050_IIO_SR1_CHAN = 6,
-	ADP1050_IIO_SR2_CHAN = 7
+	ADP1050_IIO_SR2_CHAN = 7,
+	ADP1050_IIO_OUTC_CHAN = 8,
+	ADP1050_IIO_OUTD_CHAN = 9,
 };
 
 static int adp1050_iio_read_raw(void *dev, char *buf, uint32_t len,
@@ -284,11 +282,6 @@ static int adp1050_iio_read_enable_available(void *dev, char *buf, uint32_t len,
 static int adp1050_iio_write_enable(void *dev, char *buf, uint32_t len,
 				    const struct iio_ch_info *channel,
 				    intptr_t priv);
-
-// static int adp1050_iio_read_connected_device(void *dev, char *buf, uint32_t len,
-// 		const struct iio_ch_info *channel,
-// 		intptr_t priv);
-
 
 static struct iio_attribute adp1050_input_attrs[] = {
 	{
@@ -424,10 +417,6 @@ static struct iio_attribute adp1050_global_attrs[] = {
 		.priv = ADP1050_IIO_PULSE_ENABLE,
 		.shared = IIO_SHARED_BY_ALL
 	},
-	// {
-	// 	.name = "connected_device",
-	// 	.show = adp1050_iio_read_connected_device,
-	// },
 	END_ATTRIBUTES_ARRAY
 };
 
@@ -534,6 +523,100 @@ static struct iio_channel adp1050_channels[] = {
 		.ch_out = true,
 	}
 };
+
+static struct iio_channel adp1051_channels[] = {
+	{
+		.name = "vin",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_VIN_CHAN,
+		.address = ADP1050_IIO_VIN_CHAN,
+		.attributes = adp1050_input_attrs,
+		.ch_out = false
+	},
+	{
+		.name = "iin",
+		.ch_type = IIO_CURRENT,
+		.indexed = 1,
+		.channel = ADP1050_IIO_IIN_CHAN,
+		.address = ADP1050_IIO_IIN_CHAN,
+		.attributes = adp1050_input_attrs,
+		.ch_out = false,
+	},
+	{
+		.name = "vout",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_VOUT_CHAN,
+		.address = ADP1050_IIO_VOUT_CHAN,
+		.attributes = adp1050_input_attrs,
+		.ch_out = false,
+	},
+	{
+		.name = "temperature",
+		.ch_type = IIO_TEMP,
+		.indexed = 1,
+		.channel = ADP1050_IIO_TEMP_CHAN,
+		.address = ADP1050_IIO_TEMP_CHAN,
+		.attributes = adp1050_input_attrs,
+		.ch_out = false,
+	},
+	{
+		.name = "outa",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_OUTA_CHAN,
+		.address = ADP1050_IIO_OUTA_CHAN,
+		.attributes = adp1050_output_attrs,
+		.ch_out = true,
+	},
+	{
+		.name = "outb",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_OUTB_CHAN,
+		.address = ADP1050_IIO_OUTB_CHAN,
+		.attributes = adp1050_output_attrs,
+		.ch_out = true,
+	},
+	{
+		.name = "outc",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_OUTC_CHAN,
+		.address = ADP1050_IIO_OUTC_CHAN,
+		.attributes = adp1050_output_attrs,
+		.ch_out = true,
+	},
+	{
+		.name = "outd",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_OUTD_CHAN,
+		.address = ADP1050_IIO_OUTD_CHAN,
+		.attributes = adp1050_output_attrs,
+		.ch_out = true,
+	},
+	{
+		.name = "sr1",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_SR1_CHAN,
+		.address = ADP1050_IIO_SR1_CHAN,
+		.attributes = adp1050_output_attrs,
+		.ch_out = true,
+	},
+	{
+		.name = "sr2",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP1050_IIO_SR2_CHAN,
+		.address = ADP1050_IIO_SR2_CHAN,
+		.attributes = adp1050_output_attrs,
+		.ch_out = true,
+	}
+};
+
 
 static struct iio_device adp1050_iio_dev = {
 	.num_ch = NO_OS_ARRAY_SIZE(adp1050_channels),
@@ -925,6 +1008,12 @@ static int adp1050_iio_read_modulation(void *dev, char *buf, uint32_t len,
 	case ADP1050_IIO_OUTB_CHAN:
 		ret = adp1050_read(adp1050, ADP1050_OUTA_OUTB_MODULATION_SETTINGS, &val, 1);
 		break;
+	case ADP1050_IIO_OUTC_CHAN:
+	case ADP1050_IIO_OUTD_CHAN:
+		if (adp1050->dev_id == ID_ADP1050)
+			return -ENOSYS;
+		ret = adp1050_read(adp1050, ADP1051_OUTC_OUTD_MODULATION_SETTINGS, &val, 1);
+		break;
 	case ADP1050_IIO_SR1_CHAN:
 	case ADP1050_IIO_SR2_CHAN:
 		ret = adp1050_read(adp1050, ADP1050_SR1_SR2_MODULATION_SETTINGS, &val, 1);
@@ -1026,6 +1115,20 @@ static int adp1050_iio_read_duty_cycle(void *dev, char *buf, uint32_t len,
 	case ADP1050_IIO_SR2_CHAN:
 		ret = adp1050_write(adp1050, ADP1050_DUTY_CYCLE_READING_SETTINGS,
 				    ADP1050_IIO_OUTB_DUTY_CYCLE_REPORTING, 1);
+		break;
+	case ADP1050_IIO_OUTC_CHAN:
+		if (adp1050->dev_id == ID_ADP1050)
+			return -ENOSYS;
+
+		ret = adp1050_write(adp1050, ADP1050_DUTY_CYCLE_READING_SETTINGS,
+				    ADP1051_IIO_OUTC_DUTY_CYCLE_REPORTING, 1);
+		break;
+	case ADP1050_IIO_OUTD_CHAN:
+		if (adp1050->dev_id == ID_ADP1050)
+			return -ENOSYS;
+
+		ret = adp1050_write(adp1050, ADP1050_DUTY_CYCLE_READING_SETTINGS,
+				    ADP1051_IIO_OUTD_DUTY_CYCLE_REPORTING, 1);
 		break;
 	default:
 		return -EINVAL;
@@ -1216,26 +1319,6 @@ static int adp1050_iio_write_enable(void *dev, char *buf, uint32_t len,
 }
 
 /**
- * @brief Handles the write request for enable attribute.
- * @param dev     - The iio device structure.
- * @param buf	  - Command buffer to be filled with requested data.
- * @param len     - Length of the received command buffer in bytes.
- * @param channel - Command channel info.
- * @param priv    - Command attribute id.
- * @return ret    - Result of the reading procedure.
- * 		    In case of success, the size of the read data is returned.
-*/
-// static int adp1050_iio_read_connected_device(void *dev, char *buf, uint32_t len,
-// 				    const struct iio_ch_info *channel,
-// 				    intptr_t priv)
-// {
-// 	struct adp1050_iio_desc *iio_adp1050 = dev;
-// 	struct adp1050_desc *adp1050 = iio_adp1050->adp1050_desc;
-
-// 	return sprintf(buf, "%s", adp1050_id[adp1050->dev_id]);
-// }
-
-/**
  * @brief Initializes the ADP1050 IIO descriptor.
  * @param iio_desc - The iio device descriptor.
  * @param init_param - The structure that contains the device initial parameters.
@@ -1289,6 +1372,11 @@ int adp1050_iio_init(struct adp1050_iio_desc **iio_desc,
 			    init_param->iin_scale_monitor, 2);
 	if (ret)
 		goto free_desc;
+
+	if (init_param->adp1050_init_param->dev_id == ID_ADP1051) {
+		adp1050_iio_dev.channels = adp1051_channels;
+		adp1050_iio_dev.num_ch = NO_OS_ARRAY_SIZE(adp1051_channels);
+	}
 
 	descriptor->iio_dev = &adp1050_iio_dev;
 
