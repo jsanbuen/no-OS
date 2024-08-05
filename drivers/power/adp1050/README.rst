@@ -5,11 +5,12 @@ Supported Devices
 -----------------
 
 `ADP1050 <https://www.analog.com/ADP1050>`_
+`ADP1051 <https://www.analog.com/ADP1051>`_
 
 Overview
 --------
 
-The ADP1050 is an advanced digital controller with a PMBus™ interface targeting
+The ADP1050/1 is an advanced digital controller with a PMBus™ interface targeting
 high density, high efficiency dc-to-dc power conversion.
 This controller implements voltage mode control with high speed, input voltage
 feedforward operation for enhanced transient and noise performance.
@@ -20,7 +21,7 @@ with the added control of synchronous rectification (SR).
 Applications
 ------------
 
-ADP1050
+ADP1050/1
 -------
 
 * High density, isolated dc-to-dc power supplies
@@ -178,6 +179,7 @@ ADP1050 Driver Initialization Example
 	struct adp1050_init_param adp1050_ip = {
 		.i2c_param = &adp1050_i2c_ip,
 		.pg_alt_param = &adp1050_pg_alt_ip,
+		.dev_id = ID_ADP1051,
 		.flgi_param = NULL,
 		.syni_param = NULL,
 		.on_off_config = ADP1050_ON_OFF_DEFAULT_CFG,
@@ -207,7 +209,7 @@ and each of them has a total of 2 channel attributes:
 Output Channel Attributes
 -------------------------
 
-OUTA/OUTB/SR1/SR2 channels are thee output channels of the ADP1050 IIO device
+OUTA/OUTB/OUTC/OUTD/SR1/SR2 channels are thee output channels of the ADP1050 IIO device
 and each of them has a total of 7 channel attributes:
 
 * ``enable - state of the channel``
@@ -217,6 +219,8 @@ and each of them has a total of 7 channel attributes:
 * ``duty_cycle - duty cylce value for the channel``
 * ``modulation - modulation of the channel``
 * ``modulation_available - types of modulation available for the output channels``
+
+Note: OUTC and OUTD are only available for ADP1051!
 
 Global Attributes
 -----------------
@@ -252,6 +256,7 @@ ADP1050 IIO Driver Initialization Example
 .. code-block:: bash
 
 	int ret;
+	char dev_name[7] = "adp105 "
 
 	struct adp1050_iio_desc *adp1050_iio_desc;
 	struct adp1050_iio_desc_init_param adp1050_iio_ip = {
@@ -268,9 +273,21 @@ ADP1050 IIO Driver Initialization Example
 	if (ret)
 		goto exit;
 
+	switch ((int) adp1050_iio_desc->adp1050_desc->dev_id) {
+		case ID_ADP1050:
+			dev_name[6] = '0';
+			break;
+		case ID_ADP1051:
+			dev_name[6] = '1';
+			break;
+		default:
+			dev_name[6] = '0';
+			break;
+	}
+
 	struct iio_app_device iio_devices[] = {
 		{
-			.name = "adp1050",
+			.name = dev_name,
 			.dev = adp1050_iio_desc,
 			.dev_descriptor = adp1050_iio_desc->iio_dev,
 		}
