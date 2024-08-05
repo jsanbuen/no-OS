@@ -70,9 +70,6 @@ int iio_example_main()
 		case ID_ADP1051:
 			dev_name[6] = '1';
 			break;
-		case ID_ADP1055:
-			dev_name[6] = '5';
-			break;
 		default:
 			dev_name[6] = '0';
 			break;

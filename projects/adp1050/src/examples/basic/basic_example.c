@@ -65,9 +65,6 @@ int basic_example_main()
 		case ID_ADP1051:
 			pr_info("ADP1051 detected! \n");
 			break;
-		case ID_ADP1055:
-			pr_info("ADP1055 detected! \n");
-			break;
 		default:
 			pr_info("Unknown device detected! \n");
 			goto exit;
