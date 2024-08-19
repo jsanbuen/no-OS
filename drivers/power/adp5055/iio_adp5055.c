@@ -47,6 +47,24 @@
 #include "adp5055.h"
 #include "iio_adp5055.h"
 
+static const char const* adp5055_available_currents[] = {
+	[ADP5055_7A] = "ADP5055_7A",
+	[ADP5055_3A] = "ADP5055_3A",
+	[ADP5055_3P5A] = "ADP5055_3P5A",
+	[ADP5055_1P5A] = "ADP5055_1P5A",
+	[ADP5055_INTERLEAVED_PARALLEL_14A] = "ADP5055_INTERLEAVED_PARALLEL_14A",
+	[ADP5055_IN_PHASE_PARALLEL_14A] = "ADP5055_IN_PHASE_PARALLEL_14A",
+};
+
+enum adp5055_iio_input_chan_type {
+	ADP5055_IIO_VOUT1_CHAN,
+	ADP5055_IIO_VOUT2_CHAN,
+	ADP5055_IIO_VOUT3_CHAN,
+	ADP5055_IIO_IOUT1_CHAN,
+	ADP5055_IIO_IOUT2_CHAN,
+	ADP5055_IIO_IOUT3_CHAN,
+};
+
 static int adp5055_iio_reg_read(struct adp5055_iio_desc *dev, uint32_t reg,
 				 uint32_t *readval);
 				 
@@ -56,6 +74,85 @@ static int adp5055_iio_reg_write(struct adp5055_iio_desc *dev, uint32_t reg,
 static int adp5055_iio_read_status(void *dev, char *buf, uint32_t len,
 				   const struct iio_ch_info *channel,
 				   intptr_t priv);
+
+static int adp5055_iio_read_raw(void *dev, char *buf, uint32_t len,
+				const struct iio_ch_info *channel,
+				intptr_t priv);
+
+static int adp5055_iio_write_raw(void *dev, char *buf, uint32_t len,
+				const struct iio_ch_info *channel,
+				intptr_t priv);
+
+static struct iio_attribute adp5055_input_attrs[] = {
+	{
+		.name = "raw",
+		.show = adp5055_iio_read_raw,
+		.store = adp5055_iio_write_raw,
+	},
+	// {
+	// 	.name = "scale",
+	// 	.show = adp5055_iio_read_scale,
+	// },
+	END_ATTRIBUTES_ARRAY,
+};
+
+static struct iio_channel adp5055_channels[] = {
+	{
+		.name = "vout0",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP5055_IIO_VOUT1_CHAN,
+		.address = ADP5055_IIO_VOUT1_CHAN,
+		.attributes = adp5055_input_attrs,
+		.ch_out = false
+	},
+	{
+		.name = "vout1",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP5055_IIO_VOUT2_CHAN,
+		.address = ADP5055_IIO_VOUT2_CHAN,
+		.attributes = adp5055_input_attrs,
+		.ch_out = false
+	},
+	{
+		.name = "vout2",
+		.ch_type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = ADP5055_IIO_VOUT3_CHAN,
+		.address = ADP5055_IIO_VOUT3_CHAN,
+		.attributes = adp5055_input_attrs,
+		.ch_out = false
+	},
+	{
+		.name = "iout0",
+		.ch_type = IIO_CURRENT,
+		.indexed = 1,
+		.channel = ADP5055_IIO_IOUT1_CHAN,
+		.address = ADP5055_IIO_IOUT1_CHAN,
+		.attributes = adp5055_input_attrs,
+		.ch_out = false
+	},
+	{
+		.name = "iout1",
+		.ch_type = IIO_CURRENT,
+		.indexed = 1,
+		.channel = ADP5055_IIO_IOUT2_CHAN,
+		.address = ADP5055_IIO_IOUT2_CHAN,
+		.attributes = adp5055_input_attrs,
+		.ch_out = false
+	},
+	{
+		.name = "iout2",
+		.ch_type = IIO_CURRENT,
+		.indexed = 1,
+		.channel = ADP5055_IIO_IOUT3_CHAN,
+		.address = ADP5055_IIO_IOUT3_CHAN,
+		.attributes = adp5055_input_attrs,
+		.ch_out = false
+	},
+	END_ATTRIBUTES_ARRAY
+};
 
 static struct iio_attribute adp5055_debug_attrs[] = {
 	{
@@ -72,6 +169,8 @@ static struct iio_attribute adp5055_debug_attrs[] = {
 };
 
 static struct iio_device adp5055_iio_dev = {
+	.channels = adp5055_channels,
+	.num_ch = NO_OS_ARRAY_SIZE(adp5055_channels),
 	.debug_reg_read = (int32_t (*)())adp5055_iio_reg_read,
         .debug_reg_write = (int32_t (*)())adp5055_iio_reg_write,
 	.debug_attributes = adp5055_debug_attrs,
@@ -191,3 +290,83 @@ static int adp5055_iio_read_status(void *dev, char *buf, uint32_t len,
 
 	return iio_format_value(buf, len, IIO_VAL_INT, 1, &status);
 }
+
+/**
+ * @brief Handles the read request for raw attribute.
+ * @param dev     - The iio device structure.
+ * @param buf	  - Command buffer to be filled with requested data.
+ * @param len     - Length of the received command buffer in bytes.
+ * @param channel - Command channel info.
+ * @param priv    - Command attribute id.
+ * @return ret    - Result of the reading procedure.
+ * 		    In case of success, the size of the read data is returned.
+*/
+static int adp5055_iio_read_raw(void *dev, char *buf, uint32_t len,
+				const struct iio_ch_info *channel,
+				intptr_t priv)
+{
+	struct adp5055_iio_desc *iio_adp5055 = dev;
+	struct adp5055_desc *adp5055 = iio_adp5055->adp5055_desc;
+	int i, ret;
+	int32_t temp;
+
+	switch (channel->address) {
+	case ADP5055_IIO_VOUT1_CHAN:
+	case ADP5055_IIO_VOUT2_CHAN:
+	case ADP5055_IIO_VOUT3_CHAN:
+		ret = adp5055_read_raw_vid(adp5055, channel->address + 1, (uint8_t *) &temp);
+		if (ret)
+			return ret;
+
+		return iio_format_value(buf, len, IIO_VAL_INT, 1, &temp);
+	case ADP5055_IIO_IOUT1_CHAN:
+	case ADP5055_IIO_IOUT2_CHAN:
+	case ADP5055_IIO_IOUT3_CHAN:
+		for (i = 0; i < NO_OS_ARRAY_SIZE(adp5055_available_currents); i++) {
+			if (adp5055_available_currents[i] == 
+				adp5055->out_capability[channel->address - ADP5055_IIO_IOUT1_CHAN])
+				break;
+		}
+
+		if (i >= NO_OS_ARRAY_SIZE(adp5055_available_currents))
+			return -EINVAL;
+
+		// return sprintf(buf, "%s ", adp5055_available_currents[i]);
+
+		return iio_format_value(buf, len, IIO_VAL_INT, 1, &adp5055->out_capability[0]);
+	default:
+		return -EINVAL;
+	}
+}
+
+/**
+ * @brief Handles the write request for raw attribute.
+ * @param dev     - The iio device structure.
+ * @param buf	  - Command buffer to be filled with requested data.
+ * @param len     - Length of the received command buffer in bytes.
+ * @param channel - Command channel info.
+ * @param priv    - Command attribute id.
+ * @return ret    - Result of the reading procedure.
+ * 		    In case of success, the size of the read data is returned.
+*/
+static int adp5055_iio_write_raw(void *dev, char *buf, uint32_t len,
+				const struct iio_ch_info *channel,
+				intptr_t priv)
+{
+	struct adp5055_iio_desc *iio_adp5055 = dev;
+	struct adp5055_desc *adp5055 = iio_adp5055->adp5055_desc;
+	int i, ret;
+	int32_t temp;
+
+	iio_parse_value(buf, IIO_VAL_INT, &temp, NULL);
+
+	switch (channel->address) {
+	case ADP5055_IIO_VOUT1_CHAN:
+	case ADP5055_IIO_VOUT2_CHAN:
+	case ADP5055_IIO_VOUT3_CHAN:
+		return adp5055_set_raw_vid(adp5055, channel->address + 1, (uint8_t) &temp);
+	default:
+		return -EINVAL;
+	}
+}
+
